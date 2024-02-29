@@ -1,5 +1,5 @@
 # A Gentle Introduction to Causal Inference
-This is a repository for the "Gentle Introduction to Causal Inference" course provided by Chris Oldnall for the CDCS.
+This is a repository for the "Gentle Introduction to Causal Inference" course provided by Chris Oldnall for the CDCS. Within the repository there are 4 files: 'Presentation.pdf' (to be added) - these are slides for the presentation and Q&A, 'palmer_pengiuns' - this is the data set we will use in the practical session, 'R_Tutorial' and 'Python_Tutorial' - these are the tutorial files that we will work on in Noteable, the content is identical across both.
 
 ## Schedule
 
