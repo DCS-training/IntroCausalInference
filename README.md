@@ -35,3 +35,8 @@ Congratulations you have now pulled the content of the repository on your Notabl
 6. Decide where to locate the folder. By default, it will locate it in your home directory
 7. Press 'Clone'
 Congratulations you have now pulled the content of the repository on your Notable server space.
+
+## Useful Links
+
+- [Python Statsmodels Formulae API Guide](https://www.statsmodels.org/devel/example_formulas.html)
+- [Codecademy R Linear Models Cheatsheet](https://www.codecademy.com/learn/learn-linear-regression-in-r/modules/linear-regression-in-r/cheatsheet)
