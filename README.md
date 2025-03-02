@@ -1,9 +1,10 @@
 # A Gentle Introduction to Causal Inference
-This is a repository for the "Gentle Introduction to Causal Inference" course provided by Chris Oldnall for the CDCS. Within the repository there are 4 files: 'Presentation.pdf' - these are slides for the presentation and Q&A, 'palmer_pengiuns' - this is the data set we will use in the practical session, 'R_Tutorial' and 'Python_Tutorial' - these are the tutorial files that we will work on in Noteable, the content is identical across both.
+This is a repository for the "Gentle Introduction to Causal Inference" course provided by Chris Oldnall for the CDCS. You will find resources for Week 1/2 of the sessions in the Week 1 folder (with the Week 2 resources to be released before the second session). The first session will focus on foundational concepts of causal inference, whilst the second session will delve into more advanced concepts and estimation techniques.
 
-## Schedule
+Within each week's folder there are 4 files: 'Presentation.pdf' - these are slides for the presentation and Q&A, 'R_Tutorial' and 'Python_Tutorial' - these are the tutorial files that we will work on in Noteable, the content is identical across both and then finally a data file (specific per week).
 
-Wednesday 6th March 2024
+## Schedule per session
+
 - 14:00 -- 14:10 Introduction and Motivations
 - 14:10 -- 14:50 Presentation and Q&A
 - 14:50 -- 15:00 10-minute Break
