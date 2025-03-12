@@ -1,0 +1,155 @@
+---
+title: "A Gentle Introduction to Causal Inference"
+subtitle: "CDCS"
+output: html_document
+---
+
+Welcome to the second R tutorial for the Gentle Introduction to Causal Inference course with the CDCS. In this script you will use your R skills to employ causal inference in practice. For this we will be using the 'palmer penguins' dataset. More information can be found about this data set here: https://allisonhorst.github.io/palmerpenguins/index.html. For time purposes we will use the csv version of this file from the github.
+
+In this exercise, we will explore whether **species type (Adelie vs. other species) has an effect on flipper length** in penguins. The idea is to estimate whether belonging to the **Adelie species** causally influences flipper length, while accounting for potential confounding factors such as **bill length, bill depth, body mass, and other morphological characteristics**.
+
+This mirrors real-world studies in **ecology and social sciences**, where researchers investigate whether an exposure (e.g., policy, education, or a biological factor) has a causal impact on an outcome. However, in observational data, individuals (or penguins in this case!) are **not randomly assigned** to species groups, which means **confounding** may be present.
+
+### Exercise 0
+We're going to go ahead and load in the same data we used last week. Additionally we will import a range of packages. There is a comment next to each one. Briefly discuss what we use each package for in your group.
+
+Your Answer:
+```{r Exercise0}
+library(tidyverse) # For data manipulation and visualization
+library(MatchIt) # For propensity score matching
+library(broom) # For tidying model outputs
+library(gridExtra) # For arranging plots
+library(glmnet) # For fitting logistic regression models
+penguins <- read_csv("palmer_penguins.csv")
+penguins <- penguins %>% drop_na()
+```
+
+-------------
+
+### Exercise 1
+For being able to conduct our propensity scores we need a binary variable 'treatment' to work with. This simply means our independent variable (exposure) needs to be binary. Go ahead and create a species binary variable which encodes the Adelie species as 1 and Chinstrap/Gentoo as 0. Call this 'treated'.
+
+```{r Exercise 1}
+INSERT YOUR ANSWER HERE.
+```
+
+-------------
+
+### Exercise 2
+We're now going to estimate our propensity scores. Select the following as covariates: 'bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', and 'body_mass_g'. Then run the logistic regression below to estimate our propensity scores.
+
+```{r Exercise 2}
+X <- model.matrix(treated ~ INSERT COVARAITES HERE, data = penguins)[, -1]
+y <- penguins$treated
+
+logit <- cv.glmnet(X, y, family = "binomial", alpha = 0)
+penguins$propensity_score <- predict(logit, newx = X, type = "response")[,1]
+```
+
+-------------
+
+### Exercise 3
+When we estimate propesity scoring it is useful for us to visualise how these scores are distributed throughout our dataset. Lets create a plot to help us to do this. Run the code below and discuss in below it what you see. In particular answer:
+
+i. Can we anticipate from this how much data we may need to remove?
+
+ii. Is there anything in between the two groups which may help us decide?
+
+
+```{r Exercise 3}
+ggplot(penguins, aes(x = propensity_score, fill = as.factor(treated))) +
+  geom_histogram(bins = 30, position = "identity", alpha = 0.5) +
+  scale_fill_manual(values = c("blue", "red"), labels = c("Other Species", "Adelie")) +
+  labs(title = "Propensity Score Distribution by Species",
+       x = "Propensity Score",
+       fill = "Species") +
+  theme_minimal()
+```
+
+INSERT YOUR ANSWER HERE
+
+-------------
+
+### Exercise 4
+Now we need to perform some sort of matching. We want to do this based on the propensity scores. We can use **nearest-neighbour matching** based on propensity scores. We should then assess balance before and after matching. Comment on what happens after matching.
+
+```{r, Exercise4}
+# Separate treated and control groups
+treated <- penguins %>% filter(treated == 1)
+control <- penguins %>% filter(treated == 0)
+
+# Perform nearest neighbour matching based on propensity score
+match_out <- matchit(treated ~ bill_length_mm + bill_depth_mm + flipper_length_mm + body_mass_g, 
+                     data = penguins, method = "nearest")
+
+# Get matched dataset
+matched_data <- match.data(match_out)
+
+# Plot before and after matching
+p1 <- ggplot(penguins, aes(x = propensity_score, fill = as.factor(treated))) +
+  geom_density(alpha = 0.6, adjust = 2) +  
+  scale_fill_manual(values = c("blue", "red"), labels = c("Other Species", "Adelie")) +
+  labs(title = "Before Matching", x = "Propensity Score", fill = "Species") +
+  theme_minimal()
+
+p2 <- ggplot(matched_data, aes(x = propensity_score, fill = as.factor(treated))) +
+  geom_density(alpha = 0.6, adjust = 2) +  
+  scale_fill_manual(values = c("blue", "red"), labels = c("Other Species", "Adelie")) +
+  labs(title = "After Matching", x = "Propensity Score", fill = "Species") +
+  theme_minimal()
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+INSERT YOUR ANSWER HERE
+
+-------------
+
+### Exercise 5
+Finally, even if it isn't looking too promising lets still retrieve an estimate using the matched data. Comment on this and the confidence interval that we see.
+
+```{r, Exercise 5}
+matched_model <- lm(flipper_length_mm ~ treated, data = matched_data)
+matched_effect <- coef(matched_model)["treated"]
+matched_ci <- confint(matched_model)["treated", ]
+
+cat(sprintf("Matched Treatment Effect Estimate: %.4f (%.4f, %.4f)\n",
+            matched_effect, matched_ci[1], matched_ci[2]))
+```
+
+INSERT YOUR ANSWER HERE
+
+-------------
+
+### Exercise 6
+Now lets try to compute **IPTW weights** based on propensity scores and reweight the data to create a pseudo-randomised sample. Once again comment on the plot you seem, what can we tell about the potential success of our IPTW from the graph?
+
+```{r, Exercise 6}
+penguins <- penguins %>%
+  mutate(iptw_weight = ifelse(treated == 1, 1 / propensity_score, 1 / (1 - propensity_score)))
+
+ggplot(penguins, aes(x = iptw_weight)) +
+  geom_histogram(bins = 30, aes(y = ..density..), fill = "blue", alpha = 0.5) +
+  geom_density(color = "red", linewidth = 1) +
+  labs(title = "Distribution of IPTW Weights", x = "Weight Value") +
+  theme_minimal()
+```
+
+INSERT YOUR ANSWER HERE
+
+-------------
+
+### Exercise 7
+Our final task is to use the statsmodels weighted method to use IPTW to estimate the causal effect of being an Adelie penguin on flipper length. Run this and comment on the difference between the IPTW based estimate and the matched based estimate...something very interesting has occured and highlights the wider issue of confounding...
+
+```{r, Exercise 7}
+iptw_model <- lm(flipper_length_mm ~ treated, data = penguins, weights = iptw_weight)
+
+iptw_effect <- coef(iptw_model)["treated"]
+iptw_ci <- confint(iptw_model)["treated", ]
+
+cat(sprintf("IPTW Treatment Effect Estimate: %.4f (%.4f, %.4f)\n",
+            iptw_effect, iptw_ci[1], iptw_ci[2]))
+```
+
+INSERT YOUR ANSWER HERE
