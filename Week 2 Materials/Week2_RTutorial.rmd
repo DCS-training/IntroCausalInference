@@ -20,7 +20,7 @@ library(MatchIt) # For propensity score matching
 library(broom) # For tidying model outputs
 library(gridExtra) # For arranging plots
 library(glmnet) # For fitting logistic regression models
-penguins <- read_csv("palmer_penguins.csv")
+penguins <- read_csv("/Users/chrisoldnall/Library/Mobile Documents/com~apple~CloudDocs/Teaching/IntroCausalInference/Week 2 Materials/palmer_penguins.csv")
 penguins <- penguins %>% drop_na()
 ```
 
@@ -30,7 +30,8 @@ penguins <- penguins %>% drop_na()
 For being able to conduct our propensity scores we need a binary variable 'treatment' to work with. This simply means our independent variable (exposure) needs to be binary. Go ahead and create a species binary variable which encodes the Adelie species as 1 and Chinstrap/Gentoo as 0. Call this 'treated'.
 
 ```{r Exercise 1}
-INSERT YOUR ANSWER HERE.
+penguins <- penguins %>%
+  mutate(treated = ifelse(species == "Adelie", 1, 0))
 ```
 
 -------------
@@ -39,7 +40,7 @@ INSERT YOUR ANSWER HERE.
 We're now going to estimate our propensity scores. Select the following as covariates: 'bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', and 'body_mass_g'. Then run the logistic regression below to estimate our propensity scores.
 
 ```{r Exercise 2}
-X <- model.matrix(treated ~ INSERT COVARAITES HERE, data = penguins)[, -1]
+X <- model.matrix(treated ~ bill_length_mm + bill_depth_mm + flipper_length_mm + body_mass_g, data = penguins)[, -1]
 y <- penguins$treated
 
 logit <- cv.glmnet(X, y, family = "binomial", alpha = 0)
